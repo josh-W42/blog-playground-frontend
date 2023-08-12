@@ -1,6 +1,7 @@
 import { FunctionComponent, useState } from "react";
 import { LoginBoxComponent, LoginChangeOption } from "./component";
-import axios from "axios";
+import { useLazyQuery } from "@apollo/client";
+import { LOGIN_USER } from "./queries";
 
 export const LoginBox: FunctionComponent = () => {
   const [userName, setUserName] = useState("");
@@ -19,34 +20,28 @@ export const LoginBox: FunctionComponent = () => {
     }
   };
 
+  const [login, { loading, error, data }] = useLazyQuery(LOGIN_USER);
+
   const performLogin = async () => {
     try {
-      const response = await axios.post<boolean>(
-        "http://localhost:4000/auth/login",
-        {
-          name: userName,
-          password,
-        },
-        {
-          method: "POST",
-        }
-      );
-
-      if (response.data) {
-        alert("Login Successful");
-      } else {
-        alert("Login Failed");
-      }
+      login({ variables: { name: userName, password } });
     } catch (error) {
       console.error(error);
     }
   };
+
+  if (data) {
+    alert("Success");
+  }
+
   return (
     <LoginBoxComponent
       userName={userName}
       password={password}
       loginTrigger={performLogin}
       onChange={handleChange}
+      isLoading={loading}
+      error={error ? "Invalid Username or Password" : undefined}
     />
   );
 };
